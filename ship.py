@@ -24,6 +24,11 @@ class Ship:
         self.moving_right = False
         self.moving_left = False
 
+    def center_ship(self):
+        """Відцентрувати корабель по екрану"""
+        self.rect.midbottom = self.screen_rect.midbottom
+        self.x = float(self.rect.x)
+
     def update(self):
         """Оновити точну позицію корабля відносно індикатора руху"""
         #Оновити значення ship.x
