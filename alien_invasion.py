@@ -1,3 +1,5 @@
+#Цей коментар створений для тестування збережень через git
+
 import sys
 from time import sleep
 
