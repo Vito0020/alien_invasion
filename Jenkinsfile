@@ -21,7 +21,7 @@ pipeline {
                         '''
                     } else {
                         bat '''
-                        where python
+                        where python >nul 2>nul
                         if errorlevel 1 (
                             echo Завантаження та встановлення Python...
                             powershell -Command "Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe -OutFile python-installer.exe"
@@ -42,11 +42,20 @@ pipeline {
                     } else {
                         bat '''
                         echo Перевірка Python...
-                        if exist "C:\\Program Files\\Python310\\python.exe" (
-                            "C:\\Program Files\\Python310\\python.exe" --version
-                        ) else (
-                            python --version || py --version
+                        set PYTHON=
+                        for /d %%d in ("C:\\Program Files\\Python*") do (
+                            if exist "%%d\\python.exe" (
+                                set PYTHON=%%d\\python.exe
+                                goto found
+                            )
                         )
+                        :found
+                        if not defined PYTHON (
+                            echo Python не знайдено!
+                            exit /b 1
+                        )
+                        %PYTHON% --version
+                        set PYTHON_PATH=%PYTHON%
                         '''
                     }
                 }
@@ -60,12 +69,19 @@ pipeline {
                         sh 'python3 -m pip install -r requirements.txt || python -m pip install -r requirements.txt'
                     } else {
                         bat '''
-                        echo Встановлення залежностей...
-                        if exist "C:\\Program Files\\Python310\\python.exe" (
-                            "C:\\Program Files\\Python310\\python.exe" -m pip install -r requirements.txt
-                        ) else (
-                            python -m pip install -r requirements.txt || py -3 -m pip install -r requirements.txt
+                        set PYTHON=
+                        for /d %%d in ("C:\\Program Files\\Python*") do (
+                            if exist "%%d\\python.exe" (
+                                set PYTHON=%%d\\python.exe
+                                goto found
+                            )
                         )
+                        :found
+                        if not defined PYTHON (
+                            echo Python не знайдено!
+                            exit /b 1
+                        )
+                        %PYTHON% -m pip install -r requirements.txt
                         '''
                     }
                 }
@@ -79,12 +95,19 @@ pipeline {
                         sh 'python3 -m pytest || python -m pytest'
                     } else {
                         bat '''
-                        echo Запуск тестів...
-                        if exist "C:\\Program Files\\Python310\\python.exe" (
-                            "C:\\Program Files\\Python310\\python.exe" -m pytest
-                        ) else (
-                            python -m pytest || py -3 -m pytest
+                        set PYTHON=
+                        for /d %%d in ("C:\\Program Files\\Python*") do (
+                            if exist "%%d\\python.exe" (
+                                set PYTHON=%%d\\python.exe
+                                goto found
+                            )
                         )
+                        :found
+                        if not defined PYTHON (
+                            echo Python не знайдено!
+                            exit /b 1
+                        )
+                        %PYTHON% -m pytest
                         '''
                     }
                 }
