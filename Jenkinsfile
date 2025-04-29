@@ -2,25 +2,16 @@ pipeline {
     agent any
 
     environment {
-        EXE_NAME = 'alien_invasion.exe'
-        EXE_PATH = "dist/${EXE_NAME}"
-        SCRIPT_NAME = 'alien_invasion.py'
+        PYTHON_PATH = "C:\\Users\\vitna\\Python\\Python126\\python.exe"
+        PIP = "${PYTHON_PATH} -m pip"
     }
 
     stages {
-        stage('Run EXE') {
+        stage('Run') {
             steps {
-                bat "${EXE_PATH}"
+                // Запуск створеного exe
+                bat "dist\\alien_invasion.exe --test-mode"
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline execution finished.'
-        }
-        failure {
-            echo 'Something went wrong.'
         }
     }
 }
