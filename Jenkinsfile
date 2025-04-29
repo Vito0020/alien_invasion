@@ -1,132 +1,38 @@
 pipeline {
     agent any
 
+    environment {
+        EXE_NAME = 'alien_invasion.exe'
+        EXE_PATH = "dist/${EXE_NAME}"
+        SCRIPT_NAME = 'alien_invasion.py'
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Install PyInstaller') {
             steps {
-                checkout scm
+                bat 'pip install pyinstaller'
             }
         }
 
-        stage('Install Python') {
+        stage('Build EXE') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh '''
-                        which python3 || which python || (
-                            echo "Встановлення Python..."
-                            apt-get update && apt-get install -y python3 python3-pip ||
-                            yum install -y python3 python3-pip
-                        )
-                        '''
-                    } else {
-                        bat '''
-                        where python >nul 2>nul
-                        if errorlevel 1 (
-                            echo Завантаження та встановлення Python...
-                            powershell -Command "Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe -OutFile python-installer.exe"
-                            start /wait python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
-                            del python-installer.exe
-                        )
-                        '''
-                    }
-                }
+                bat "pyinstaller --onefile %SCRIPT_NAME%"
             }
         }
 
-        stage('Verify Python') {
+        stage('Run EXE') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh 'python3 --version || python --version'
-                    } else {
-                        bat '''
-                        echo Перевірка Python...
-                        set PYTHON=
-                        for /d %%d in ("C:\\Program Files\\Python*") do (
-                            if exist "%%d\\python.exe" (
-                                set PYTHON=%%d\\python.exe
-                                goto found
-                            )
-                        )
-                        :found
-                        if not defined PYTHON (
-                            echo Python не знайдено!
-                            exit /b 1
-                        )
-                        %PYTHON% --version
-                        set PYTHON_PATH=%PYTHON%
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh 'python3 -m pip install -r requirements.txt || python -m pip install -r requirements.txt'
-                    } else {
-                        bat '''
-                        set PYTHON=
-                        for /d %%d in ("C:\\Program Files\\Python*") do (
-                            if exist "%%d\\python.exe" (
-                                set PYTHON=%%d\\python.exe
-                                goto found
-                            )
-                        )
-                        :found
-                        if not defined PYTHON (
-                            echo Python не знайдено!
-                            exit /b 1
-                        )
-                        %PYTHON% -m pip install -r requirements.txt
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh 'python3 -m pytest || python -m pytest'
-                    } else {
-                        bat '''
-                        set PYTHON=
-                        for /d %%d in ("C:\\Program Files\\Python*") do (
-                            if exist "%%d\\python.exe" (
-                                set PYTHON=%%d\\python.exe
-                                goto found
-                            )
-                        )
-                        :found
-                        if not defined PYTHON (
-                            echo Python не знайдено!
-                            exit /b 1
-                        )
-                        %PYTHON% -m pytest
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Archive Artifacts') {
-            steps {
-                archiveArtifacts artifacts: '**/*.py', fingerprint: true
+                bat "${EXE_PATH}"
             }
         }
     }
 
     post {
-        success {
-            echo 'Збірка успішна!'
+        always {
+            echo 'Pipeline execution finished.'
         }
         failure {
-            echo 'Збірка не вдалася!'
+            echo 'Something went wrong.'
         }
     }
 }
