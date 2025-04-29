@@ -12,9 +12,10 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'pip install -r requirements.txt'
+                        sh 'python -m pip install -r requirements.txt'
                     } else {
-                        bat 'pip install -r requirements.txt'
+                        // For Windows, try to use Python's full path
+                        bat 'C:\\Python310\\python.exe -m pip install -r requirements.txt || python -m pip install -r requirements.txt'
                     }
                 }
             }
@@ -24,9 +25,9 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'python -m unittest discover tests'
+                        sh 'python -m pytest'
                     } else {
-                        bat 'python -m unittest discover tests'
+                        bat 'python -m pytest'
                     }
                 }
             }
@@ -34,14 +35,14 @@ pipeline {
 
         stage('Archive Artifacts') {
             steps {
-                archiveArtifacts artifacts: 'dist/alien_invasion.exe', fingerprint: true
+                archiveArtifacts artifacts: '**/*.py', fingerprint: true
             }
         }
     }
 
     post {
         success {
-            echo 'Build completed successfully!'
+            echo 'Build successful!'
         }
         failure {
             echo 'Build failed!'
