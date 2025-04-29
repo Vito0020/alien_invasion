@@ -1,22 +1,32 @@
+import unittest
 import pygame
-import pytest
 from ship import Ship
+from settings import Settings
 
-class MockSettings:
-    ship_speed = 1.5
-
-class MockGame:
+class DummyGame:
     def __init__(self):
         pygame.init()
+        self.settings = Settings()
         self.screen = pygame.display.set_mode((800, 600))
-        self.settings = MockSettings()
 
-@pytest.fixture
-def game():
-    return MockGame()
+class ShipMovementTest(unittest.TestCase):
+    def setUp(self):
+        self.game = DummyGame()
+        self.ship = Ship(self.game)
 
-def test_ship_initial_position(game):
-    ship = Ship(game)
-    screen_rect = game.screen.get_rect()
-    assert ship.rect.midbottom == screen_rect.midbottom
-    assert ship.x == float(ship.rect.x)
+    def test_move_right(self):
+        """Перевірити, що корабель рухається праворуч"""
+        initial_x = self.ship.rect.x
+        self.ship.moving_right = True
+        self.ship.update()
+        self.assertGreater(self.ship.rect.x, initial_x)
+
+    def test_move_left(self):
+        """Перевірити, що корабель рухається ліворуч"""
+        initial_x = self.ship.rect.x
+        self.ship.moving_left = True
+        self.ship.update()
+        self.assertLess(self.ship.rect.x, initial_x)
+
+if __name__ == '__main__':
+    unittest.main()

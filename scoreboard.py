@@ -1,5 +1,4 @@
 import pygame.font
-from pygame.examples.cursors import image
 from pygame.sprite import Group
 
 from ship import Ship

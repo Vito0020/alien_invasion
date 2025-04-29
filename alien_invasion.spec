@@ -5,7 +5,7 @@ a = Analysis(
     ['alien_invasion.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('images', 'images')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
