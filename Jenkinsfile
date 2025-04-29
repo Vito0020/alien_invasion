@@ -20,16 +20,13 @@ pipeline {
                         )
                         '''
                     } else {
-                        // Для Windows завантажуємо та встановлюємо Python, якщо він не знайдений
                         bat '''
-                        where python || (
+                        where python
+                        if errorlevel 1 (
                             echo Завантаження та встановлення Python...
                             powershell -Command "Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe -OutFile python-installer.exe"
-                            python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
+                            start /wait python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
                             del python-installer.exe
-
-                            REM Оновлення PATH для поточного сеансу
-                            set PATH=%PATH%;C:\\Program Files\\Python310;C:\\Program Files\\Python310\\Scripts
                         )
                         '''
                     }
@@ -41,17 +38,15 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'python --version || python3 --version'
+                        sh 'python3 --version || python --version'
                     } else {
                         bat '''
-                        echo Перевірка шляхів...
-                        echo %PATH%
-
-                        echo Пошук python.exe...
-                        where python || dir "C:\\Program Files\\Python*\\python.exe" || dir "C:\\Python*\\python.exe"
-
-                        echo Перевірка версії Python...
-                        "C:\\Program Files\\Python310\\python.exe" --version || python --version || py --version
+                        echo Перевірка Python...
+                        if exist "C:\\Program Files\\Python310\\python.exe" (
+                            "C:\\Program Files\\Python310\\python.exe" --version
+                        ) else (
+                            python --version || py --version
+                        )
                         '''
                     }
                 }
@@ -66,9 +61,11 @@ pipeline {
                     } else {
                         bat '''
                         echo Встановлення залежностей...
-                        "C:\\Program Files\\Python310\\python.exe" -m pip install -r requirements.txt || ^
-                        python -m pip install -r requirements.txt || ^
-                        py -3 -m pip install -r requirements.txt
+                        if exist "C:\\Program Files\\Python310\\python.exe" (
+                            "C:\\Program Files\\Python310\\python.exe" -m pip install -r requirements.txt
+                        ) else (
+                            python -m pip install -r requirements.txt || py -3 -m pip install -r requirements.txt
+                        )
                         '''
                     }
                 }
@@ -81,7 +78,14 @@ pipeline {
                     if (isUnix()) {
                         sh 'python3 -m pytest || python -m pytest'
                     } else {
-                        bat '"C:\\Program Files\\Python310\\python.exe" -m pytest || python -m pytest || py -3 -m pytest'
+                        bat '''
+                        echo Запуск тестів...
+                        if exist "C:\\Program Files\\Python310\\python.exe" (
+                            "C:\\Program Files\\Python310\\python.exe" -m pytest
+                        ) else (
+                            python -m pytest || py -3 -m pytest
+                        )
+                        '''
                     }
                 }
             }
